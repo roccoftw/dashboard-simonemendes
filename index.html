@@ -65,7 +65,6 @@
                 const response = await fetch(API_INSTA_URL);
                 const posts = await response.json();
                 container.innerHTML = '';
-                // Aumentado para 4 posts
                 posts.slice(0, 4).forEach(post => {
                     const imgUrl = post.displayUrl || post.thumbnailUrl;
                     const postLink = post.url || `https://www.instagram.com/p/${post.shortCode}/`;
@@ -91,16 +90,17 @@
                 const response = await fetch(API_X_URL);
                 const tweets = await response.json();
                 container.innerHTML = '';
+                
                 tweets.slice(0, 4).forEach(tweet => {
-                    // Tenta encontrar o link de várias formas que o Apify costuma entregar
-                    const tweetLink = tweet.url || (tweet.id_str ? `https://x.com/simonemendes/status/${tweet.id_str}` : `https://x.com/simonemendes`);
+                    // Tenta encontrar a URL correta em diferentes campos que o Apify costuma usar
+                    const tweetUrl = tweet.url || tweet.link || (tweet.id_str ? `https://x.com/simonemendes/status/${tweet.id_str}` : `https://x.com/simonemendes`);
                     
                     container.innerHTML += `
                         <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-400 hover:shadow-md transition">
                             <p class="text-xs text-gray-800 font-medium mb-3 leading-relaxed">${tweet.full_text || tweet.text || 'Conteúdo indisponível'}</p>
                             <div class="flex justify-between items-center border-t pt-2 mt-1">
                                 <span class="text-[9px] text-gray-400 uppercase font-bold tracking-tighter">${tweet.created_at ? new Date(tweet.created_at).toLocaleDateString('pt-BR') : ''}</span>
-                                <a href="${tweetLink}" target="_blank" rel="noopener noreferrer" class="text-[9px] font-black text-blue-500 hover:underline">ABRIR NO X</a>
+                                <a href="${tweetUrl}" target="_blank" rel="noopener noreferrer" class="text-[9px] font-black text-blue-500 hover:underline">ABRIR POSTAGEM NO X →</a>
                             </div>
                         </div>`;
                 });
