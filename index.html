@@ -51,7 +51,6 @@
     <script>
         document.getElementById('data-atual').innerText = new Date().toLocaleDateString('pt-BR');
 
-        // USANDO SUA API DE POSTAGENS OFICIAIS
         const API_X_POSTS = 'https://api.apify.com/v2/datasets/vzdZVcYYHfJbm0lTs/items?token=apify_api_BFPY25NKket8tQpPgp7lAmc1DQp2aA0YBu2N';
         const API_INSTA = 'https://api.apify.com/v2/datasets/jShBgGCJ09CJFJdnb/items?token=apify_api_BFPY25NKket8tQpPgp7lAmc1DQp2aA0YBu2N';
 
@@ -64,11 +63,20 @@
                 
                 data.slice(0, 8).forEach(t => {
                     // Formatação da Data
-                    const dataPost = t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : 'Recente';
+                    const rawDate = t.created_at || t.createdAt;
+                    const dataPost = rawDate ? new Date(rawDate).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : 'Recente';
                     
-                    // Link direto para a postagem
-                    const tweetId = t.rest_id || t.id_str;
-                    const link = t.url || `https://x.com/simonemendes/status/${tweetId}`;
+                    // LÓGICA DE LINK CORRIGIDA: tenta capturar o ID de todas as formas possíveis
+                    const tweetId = t.id_str || t.rest_id || t.id;
+                    let linkFinal = t.url || t.link;
+
+                    // Se não houver URL pronta, reconstrói usando o ID capturado
+                    if (!linkFinal && tweetId) {
+                        linkFinal = `https://x.com/simonemendes/status/${tweetId}`;
+                    } else if (!linkFinal) {
+                        // Fallback caso tudo falhe
+                        linkFinal = `https://x.com/simonemendes`;
+                    }
                     
                     container.innerHTML += `
                         <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:border-blue-400 transition-all group">
@@ -76,12 +84,12 @@
                                 <span class="text-[9px] font-bold text-blue-500 uppercase tracking-widest italic">@simonemendes</span>
                                 <span class="text-[9px] text-gray-400 font-mono">${dataPost}</span>
                             </div>
-                            <p class="text-[12px] leading-relaxed text-gray-800 mb-3">${t.full_text || t.text}</p>
-                            <a href="${link}" target="_blank" class="inline-block text-[10px] font-black text-black border-b-2 border-blue-400 uppercase italic tracking-tighter hover:text-blue-600 transition">Acessar Postagem Original →</a>
+                            <p class="text-[12px] leading-relaxed text-gray-800 mb-3">${t.full_text || t.text || ''}</p>
+                            <a href="${linkFinal}" target="_blank" rel="noopener noreferrer" class="inline-block text-[10px] font-black text-black border-b-2 border-blue-400 uppercase italic tracking-tighter hover:text-blue-600 transition">Acessar Postagem Original →</a>
                         </div>`;
                 });
             } catch (e) { 
-                container.innerHTML = '<p class="text-[10px] italic text-gray-400">Carregando feed oficial...</p>'; 
+                container.innerHTML = '<p class="text-[10px] italic text-gray-400">Erro ao carregar feed. Verifique se a Task no Apify foi executada.</p>'; 
             }
         }
 
