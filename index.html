@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simone Mendes | Intelligence Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ajuste para o Iframe do X não quebrar o layout */
+        .x-monitor {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 12px;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased text-gray-900">
 
@@ -50,15 +59,25 @@
                 <div id="lista-noticias" class="space-y-4"></div>
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-4">
                 <div class="flex items-center gap-2 mb-2">
                     <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white shadow-lg border border-gray-700">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
                     </div>
-                    <h2 class="text-lg font-black uppercase italic">X Intelligence</h2>
+                    <h2 class="text-lg font-black uppercase italic tracking-tight">X Real-Time Search</h2>
                 </div>
-                <div id="feed-x-simone" class="space-y-3"></div>
-                <div id="feed-x-mencoes" class="space-y-3"></div>
+                
+                <div class="bg-white rounded-xl shadow-inner border border-gray-200 overflow-hidden">
+                    <iframe 
+                        src="https://syndication.twitter.com/srv/timeline-profile/screen-name/simonemendes?showReplies=true&transparent=0&theme=light" 
+                        class="x-monitor"
+                        title="X Monitor">
+                    </iframe>
+                </div>
+                
+                <a href="https://x.com/search?q=Simone%20Mendes&f=live" target="_blank" class="block text-center bg-gray-200 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-yellow-500 transition">
+                    Abrir Busca Completa (Live) no X →
+                </a>
             </div>
         </div>
     </main>
@@ -67,7 +86,6 @@
         document.getElementById('data-atual').innerText = new Date().toLocaleDateString('pt-BR', {year: 'numeric', month: 'long', day: 'numeric'});
 
         const API_INSTA = 'https://api.apify.com/v2/datasets/jShBgGCJ09CJFJdnb/items?token=apify_api_BFPY25NKket8tQpPgp7lAmc1DQp2aA0YBu2N';
-        const API_X = 'https://api.apify.com/v2/datasets/DTWaPRvBEbImHUq9a/items?token=apify_api_BFPY25NKket8tQpPgp7lAmc1DQp2aA0YBu2N';
 
         async function carregarInstagram() {
             const oficialCont = document.getElementById('insta-oficial');
@@ -76,8 +94,6 @@
                 const response = await fetch(API_INSTA);
                 const posts = await response.json();
                 
-                // Filtramos os 4 da artista (pelo ownerId ou username se disponível no scraper)
-                // Se o dataset for misto, ele separa. Se for só dela, ele pega os 4 primeiros e os 4 seguintes.
                 const oficiais = posts.slice(0, 4);
                 const mencoes = posts.slice(4, 8);
 
@@ -86,7 +102,7 @@
                     const img = `https://images.weserv.nl/?url=${encodeURIComponent(post.displayUrl)}&w=600&fit=cover`;
                     oficialCont.innerHTML += `
                         <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-                            <a href="${post.url}" target="_blank"><img src="${img}" class="w-full h-48 object-cover"></a>
+                            <a href="${post.url}" target="_blank"><img src="${img}" class="w-full h-48 object-cover hover:opacity-90 transition"></a>
                             <div class="p-3 text-[10px] italic text-gray-500 line-clamp-2">"${post.caption}"</div>
                         </div>`;
                 });
@@ -102,35 +118,6 @@
             } catch (e) { console.error(e); }
         }
 
-        async function carregarX() {
-            try {
-                const response = await fetch(API_X);
-                const tweets = await response.json();
-                const simoneCont = document.getElementById('feed-x-simone');
-                const mencoesCont = document.getElementById('feed-x-mencoes');
-
-                simoneCont.innerHTML = '<p class="text-[10px] font-bold text-gray-400 uppercase border-b pb-1 italic">Posts Oficiais (5)</p>';
-                tweets.slice(0, 5).forEach(t => {
-                    const link = t.url || `https://x.com/simonemendes/status/${t.id_str}`;
-                    simoneCont.innerHTML += `
-                        <div class="bg-white p-3 rounded-lg border-l-4 border-black shadow-sm">
-                            <p class="text-[11px] leading-snug mb-2">${t.full_text || t.text}</p>
-                            <a href="${link}" target="_blank" class="text-[9px] font-bold text-blue-500 uppercase tracking-tighter">Ver no X →</a>
-                        </div>`;
-                });
-
-                mencoesCont.innerHTML = '<p class="text-[10px] font-bold text-blue-500 uppercase border-b border-blue-100 pb-1 italic">Menções (5)</p>';
-                tweets.slice(5, 10).forEach(t => {
-                    const link = t.url || `https://x.com/x/status/${t.id_str}`;
-                    mencoesCont.innerHTML += `
-                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                            <p class="text-[10px] leading-tight text-gray-600 mb-1">${t.full_text || t.text}</p>
-                            <a href="${link}" target="_blank" class="text-[8px] font-bold text-blue-400 uppercase underline">Link</a>
-                        </div>`;
-                });
-            } catch (e) { console.error(e); }
-        }
-
         async function buscarNoticias() {
             const container = document.getElementById('lista-noticias');
             const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=allintitle:"Simone+Mendes"+when:1d&hl=pt-BR&gl=BR&ceid=BR:pt-419');
@@ -142,16 +129,15 @@
                 if (data.status === 'ok') {
                     const ordenadas = data.items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
                     container.innerHTML = '';
-                    ordenadas.slice(0, 10).forEach(item => {
+                    ordenadas.slice(0, 8).forEach(item => {
                         const portalUrl = new URL(item.link).hostname;
-                        // NOVO: Logo do Portal Real usando Favicon direto do domínio
-                        const logo = `https://icon.horse/icon/${portalUrl}`; 
+                        const logo = `https://www.google.com/s2/favicons?domain=${portalUrl}&sz=64`; 
                         const hora = new Date(item.pubDate).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
 
                         container.innerHTML += `
                             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-yellow-500 transition-all group">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <img src="${logo}" class="w-4 h-4 rounded shadow-sm border border-gray-50" onerror="this.src='https://www.google.com/s2/favicons?domain=${portalUrl}'">
+                                    <img src="${logo}" class="w-4 h-4 rounded shadow-sm">
                                     <span class="text-[9px] font-black text-gray-400 uppercase tracking-tighter">${item.author || 'Notícia'}</span>
                                     <span class="ml-auto text-[9px] text-gray-300 italic font-bold">${hora}</span>
                                 </div>
@@ -164,7 +150,6 @@
         }
 
         carregarInstagram();
-        carregarX();
         buscarNoticias();
     </script>
 </body>
