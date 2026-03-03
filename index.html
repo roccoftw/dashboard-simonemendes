@@ -56,12 +56,11 @@
                 const response = await fetch(API_X_POSTS + '&clean=true&format=json');
                 const data = await response.json();
                 container.innerHTML = '';
-                
                 data.slice(0, 8).forEach(t => {
                     const rawDate = t.created_at || t.createdAt;
                     const dataPost = rawDate ? new Date(rawDate).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : 'Recente';
                     const tweetId = t.id_str || t.rest_id || t.id;
-                    let linkFinal = t.url || t.link || (tweetId ? `https://x.com/simonemendes/status/${tweetId}` : `https://x.com/simonemendes`);
+                    const linkFinal = t.url || t.link || (tweetId ? `https://x.com/simonemendes/status/${tweetId}` : `https://x.com/simonemendes`);
                     
                     container.innerHTML += `
                         <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:border-blue-400 transition-all">
@@ -70,7 +69,7 @@
                                 <span class="text-[9px] text-gray-400 font-mono">${dataPost}</span>
                             </div>
                             <p class="text-[12px] leading-relaxed text-gray-800 mb-3">${t.full_text || t.text || ''}</p>
-                            <a href="${linkFinal}" target="_blank" class="text-[10px] font-black text-black border-b-2 border-blue-400 uppercase italic tracking-tighter hover:text-blue-600 transition">Acessar Postagem Original →</a>
+                            <a href="${linkFinal}" target="_blank" class="text-[10px] font-black text-black border-b-2 border-blue-400 uppercase italic tracking-tighter">Post Original →</a>
                         </div>`;
                 });
             } catch (e) { console.error(e); }
@@ -94,21 +93,23 @@
 
         async function buscarNoticias() {
             const container = document.getElementById('lista-noticias');
-            const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=allintitle:"Simone+Mendes"+when:2d&hl=pt-BR&gl=BR&ceid=BR:pt-419');
-            const apiLink = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+            // Removido o 'allintitle:' para evitar que a coluna fique vazia por excesso de filtro
+            const query = encodeURIComponent('"Simone Mendes" when:7d');
+            const rssUrl = `https://news.google.com/rss/search?q=${query}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
+            const apiLink = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+            
             try {
                 const response = await fetch(apiLink);
                 const data = await response.json();
-                if (data.status === 'ok') {
-                    // ORDENAÇÃO CRONOLÓGICA REAL (Data + Hora)
+                
+                if (data.status === 'ok' && data.items.length > 0) {
+                    // Ordenação cronológica absoluta (Timestamp)
                     const ordenadas = data.items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
                     
                     container.innerHTML = '';
                     ordenadas.slice(0, 10).forEach(item => {
                         const portalUrl = new URL(item.link).hostname;
                         const dataObj = new Date(item.pubDate);
-                        
-                        // Formatação visual da data e hora
                         const dataFormatada = dataObj.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
                         const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
 
@@ -116,15 +117,19 @@
                             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-yellow-500 transition-all group">
                                 <div class="flex items-center gap-2 mb-2">
                                     <img src="https://www.google.com/s2/favicons?domain=${portalUrl}&sz=64" class="w-4 h-4 rounded shadow-sm">
-                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-tighter">${item.author || 'Portal'}</span>
-                                    <span class="ml-auto text-[9px] text-gray-400 italic font-bold underline decoration-yellow-500 decoration-2">${dataFormatada} • ${horaFormatada}</span>
+                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-tighter">${item.author || 'Imprensa'}</span>
+                                    <span class="ml-auto text-[9px] text-gray-400 italic font-bold">${dataFormatada} • ${horaFormatada}</span>
                                 </div>
                                 <h3 class="font-bold text-gray-900 text-[12px] leading-tight mb-3 group-hover:text-yellow-600">${item.title}</h3>
-                                <a href="${item.link}" target="_blank" class="text-[10px] font-black text-black border-b-2 border-yellow-500 uppercase italic tracking-tighter hover:text-yellow-700">Ler Manchete</a>
+                                <a href="${item.link}" target="_blank" class="text-[10px] font-black text-black border-b-2 border-yellow-500 uppercase italic tracking-tighter">Ler Manchete</a>
                             </div>`;
                     });
+                } else {
+                    container.innerHTML = '<p class="text-[10px] italic text-gray-400 text-center">Nenhuma notícia recente encontrada.</p>';
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                container.innerHTML = '<p class="text-[10px] italic text-red-400 text-center">Erro ao carregar notícias.</p>';
+            }
         }
 
         carregarInstagram();
