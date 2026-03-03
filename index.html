@@ -67,22 +67,8 @@
     <script>
         document.getElementById('data-atual').innerText = new Date().toLocaleDateString('pt-BR', {year: 'numeric', month: 'long', day: 'numeric'});
 
-        // LINKS APIFY
         const API_INSTA = 'https://api.apify.com/v2/datasets/jShBgGCJ09CJFJdnb/items?token=apify_api_BFPY25NKket8tQpPgp7lAmc1DQp2aA0YBu2N';
         const API_X_POSTS = 'https://api.apify.com/v2/datasets/DTWaPRvBEbImHUq9a/items?token=apify_api_BFPY25NKket8tQpPgp7lAmc1DQp2aA0YBu2N';
-        
-        // PARA AS MENÇÕES: Cole aqui o link do dataset de busca por "Simone Mendes"
-        const API_X_SEARCH = API_X_POSTS; 
-
-        // Função para garantir que o link do post seja encontrado
-        function getCleanUrl(item, platform) {
-            if (platform === 'insta') {
-                return item.url || `https://www.instagram.com/p/${item.shortCode}/`;
-            }
-            if (platform === 'x') {
-                return item.url || item.link || (item.id_str ? `https://x.com/x/status/${item.id_str}` : `https://x.com/search?q=Simone%20Mendes`);
-            }
-        }
 
         async function carregarInstagram() {
             const container = document.getElementById('feed-instagram');
@@ -92,15 +78,15 @@
                 container.innerHTML = '';
                 posts.slice(0, 4).forEach(post => {
                     const imgUrl = `https://images.weserv.nl/?url=${encodeURIComponent(post.displayUrl || post.thumbnailUrl)}&w=500&h=500&fit=cover`;
-                    const link = getCleanUrl(post, 'insta');
+                    const link = post.url || `https://www.instagram.com/p/${post.shortCode}/`;
                     container.innerHTML += `
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden group">
-                            <a href="${link}" target="_blank" rel="noopener">
+                            <a href="${link}" target="_blank">
                                 <img src="${imgUrl}" class="w-full h-56 object-cover group-hover:scale-105 transition duration-500">
                             </a>
                             <div class="p-3">
                                 <p class="text-[10px] text-gray-500 line-clamp-2 mb-2 italic">"${post.caption || ''}"</p>
-                                <a href="${link}" target="_blank" class="text-[10px] font-bold text-pink-600 uppercase">Ver postagem →</a>
+                                <a href="${link}" target="_blank" class="text-[10px] font-bold text-pink-600 uppercase">Ver no Instagram →</a>
                             </div>
                         </div>`;
                 });
@@ -109,32 +95,32 @@
 
         async function carregarX() {
             try {
-                // Posts da Artista
                 const resPosts = await fetch(API_X_POSTS);
                 const tweets = await resPosts.json();
+                
+                // Posts da Simone
                 const containerSimone = document.getElementById('feed-x-simone');
                 containerSimone.innerHTML = '';
                 tweets.slice(0, 3).forEach(tweet => {
-                    const link = getCleanUrl(tweet, 'x');
+                    const link = tweet.url || tweet.link || (tweet.id_str ? `https://x.com/simonemendes/status/${tweet.id_str}` : `https://x.com/simonemendes`);
                     containerSimone.innerHTML += `
                         <div class="bg-white p-4 rounded-xl border-l-4 border-black shadow-sm group">
                             <p class="text-xs text-gray-800 leading-relaxed mb-2">${tweet.full_text || tweet.text}</p>
-                            <a href="${link}" target="_blank" class="text-[9px] font-black text-blue-500 uppercase group-hover:underline">Abrir Tweet Original →</a>
+                            <a href="${link}" target="_blank" class="text-[9px] font-black text-blue-500 uppercase hover:underline">Abrir no X →</a>
                         </div>`;
                 });
 
-                // Menções em tempo real (Geral)
+                // Menções Gerais (Simulação com os mais recentes do dataset)
                 const containerMencoes = document.getElementById('feed-x-mencoes');
                 containerMencoes.innerHTML = '';
-                // Aqui usamos os últimos do dataset de busca
                 tweets.slice(0, 3).reverse().forEach(tweet => {
-                    const link = getCleanUrl(tweet, 'x');
+                    const link = tweet.url || tweet.link || (tweet.id_str ? `https://x.com/x/status/${tweet.id_str}` : '#');
                     containerMencoes.innerHTML += `
                         <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 shadow-sm">
                             <p class="text-[11px] text-gray-700 leading-tight mb-2 font-medium">${tweet.full_text || tweet.text}</p>
                             <div class="flex justify-between items-center text-[8px] font-bold text-blue-400">
-                                <span>RECÉM POSTADO</span>
-                                <a href="${link}" target="_blank" class="text-blue-600 underline uppercase">Ver Post</a>
+                                <span>TRENDING AGORA</span>
+                                <a href="${link}" target="_blank" class="text-blue-600 underline uppercase">Ver Postagem</a>
                             </div>
                         </div>`;
                 });
@@ -152,7 +138,7 @@
                     container.innerHTML = '';
                     data.items.slice(0, 8).forEach(item => {
                         container.innerHTML += `
-                            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:border-yellow-500 transition-all">
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:border-yellow-500 transition-all group">
                                 <span class="bg-yellow-100 text-yellow-900 text-[9px] font-black px-2 py-0.5 rounded uppercase mb-2 inline-block">${item.author || 'Imprensa'}</span>
                                 <h3 class="font-bold text-gray-900 text-sm leading-tight mb-3">${item.title}</h3>
                                 <a href="${item.link}" target="_blank" class="text-[10px] font-black text-black border-b-2 border-yellow-500">LER MATÉRIA</a>
