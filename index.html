@@ -6,16 +6,65 @@
     <title>Dashboard Simone Mendes</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 p-6">
-    <header class="bg-black text-white p-6 rounded-xl mb-8 flex justify-between items-center">
-        <h1 class="text-2xl font-bold tracking-tight">SIMONE MENDES <span class="text-yellow-500 text-sm font-normal">Monitoramento 24h</span></h1>
+<body class="bg-gray-100 p-6">
+    <header class="bg-black text-white p-6 rounded-xl mb-8 flex justify-between items-center shadow-lg">
+        <h1 class="text-2xl font-bold tracking-tight text-yellow-500">SIMONE MENDES <span class="text-white text-sm font-light ml-2">| MONITORAMENTO REAL-TIME</span></h1>
     </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-200 text-center">
-            <h2 class="text-xl font-bold mb-4">Bem-vindo ao Dashboard!</h2>
-            <p class="text-gray-600">O arquivo foi criado com sucesso. O próximo passo será conectar as redes sociais e portais.</p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="space-y-4">
+            <h2 class="text-lg font-bold text-gray-800 border-b-2 border-yellow-500 pb-2">Redes Sociais</h2>
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-pink-500">
+                <p class="font-bold text-sm">Instagram @simonemendes</p>
+                <p class="text-xs text-gray-500 mt-1">Conectando ao robô Apify...</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-400">
+                <p class="font-bold text-sm">X (Twitter) @simonemendes</p>
+                <p class="text-xs text-gray-500 mt-1">Aguardando integração...</p>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 space-y-4">
+            <h2 class="text-lg font-bold text-gray-800 border-b-2 border-yellow-500 pb-2">Últimas nos Portais de Notícias</h2>
+            <div id="lista-noticias" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p class="text-gray-400 animate-pulse">Carregando notícias de hoje...</p>
+            </div>
         </div>
     </div>
+
+    <script>
+        // COLOQUE SUA CHAVE ABAIXO:
+        const API_KEY = 'e9606f704f4d4c3b99c7247eca2a60dc'; 
+        const termoBusca = 'Simone Mendes';
+
+        async function carregarNoticias() {
+            try {
+                const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(termoBusca)}&sortBy=publishedAt&language=pt&apiKey=${API_KEY}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const container = document.getElementById('lista-noticias');
+                container.innerHTML = '';
+
+                if(data.articles && data.articles.length > 0) {
+                    data.articles.slice(0, 8).forEach(artigo => {
+                        container.innerHTML += `
+                            <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition border border-gray-200">
+                                <span class="text-[10px] font-bold text-yellow-600 uppercase">${artigo.source.name}</span>
+                                <h3 class="font-bold text-sm mt-1 mb-2 leading-tight">${artigo.title}</h3>
+                                <a href="${artigo.url}" target="_blank" class="text-blue-500 text-xs font-semibold hover:underline text-right block">Ver notícia →</a>
+                            </div>
+                        `;
+                    });
+                } else {
+                    container.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma notícia encontrada nas últimas 24h.</p>';
+                }
+            } catch (error) {
+                console.error("Erro ao buscar notícias", error);
+            }
+        }
+
+        carregarNoticias();
+    </script>
 </body>
 </html>
