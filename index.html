@@ -28,7 +28,7 @@
                 <div id="feed-instagram" class="grid grid-cols-1 gap-6">
                     <div class="col-span-full py-10 text-center">
                         <div class="animate-spin inline-block w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full mb-2"></div>
-                        <p class="text-gray-400 text-xs">Conectando ao Apify...</p>
+                        <p class="text-gray-400 text-xs">Carregando mídia...</p>
                     </div>
                 </div>
             </div>
@@ -38,20 +38,17 @@
                     <span class="w-2 h-6 bg-yellow-500 rounded-full"></span> Últimas da Imprensa
                 </h2>
                 <div id="lista-noticias" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="col-span-full py-10 text-center text-gray-500 italic text-sm">Buscando notícias nos portais...</div>
+                    <div class="col-span-full py-10 text-center text-gray-500 italic text-sm">Buscando notícias...</div>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // DATA ATUAL
         document.getElementById('data-atual').innerText = new Date().toLocaleDateString('pt-BR');
 
-        // URL DO SEU DATASET DO APIFY
         const APIFY_URL = 'https://api.apify.com/v2/datasets/jShBgGCJ09CJFJdnb/items?token=apify_api_BFPY25NKket8tQpPgp7lAmc1DQp2aA0YBu2N';
 
-        // FUNÇÃO: CARREGAR INSTAGRAM
         async function carregarInstagram() {
             const container = document.getElementById('feed-instagram');
             try {
@@ -59,18 +56,22 @@
                 const posts = await response.json();
                 
                 container.innerHTML = '';
-                // Pegamos os últimos 4 posts
                 posts.slice(0, 4).forEach(post => {
-                    const imagem = post.displayUrl || post.thumbnailUrl;
-                    if (imagem) {
+                    const originalImg = post.displayUrl || post.thumbnailUrl;
+                    // MÁGICA: Passamos a imagem por um Proxy para quebrar o bloqueio do Instagram
+                    const proxyImg = `https://images.weserv.nl/?url=${encodeURIComponent(originalImg)}&w=500&h=500&fit=cover`;
+
+                    if (originalImg) {
                         container.innerHTML += `
                             <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden group hover:shadow-lg transition">
-                                <img src="${imagem}" referrerpolicy="no-referrer" class="w-full h-64 object-cover group-hover:scale-105 transition duration-500">
+                                <div class="h-64 overflow-hidden">
+                                    <img src="${proxyImg}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 shadow-inner">
+                                </div>
                                 <div class="p-4">
                                     <p class="text-[11px] text-gray-600 line-clamp-2 italic mb-3">"${post.caption || 'Sem legenda'}"</p>
                                     <div class="flex justify-between items-center border-t pt-3">
                                         <span class="text-xs font-bold text-pink-600">❤️ ${post.likesCount ? post.likesCount.toLocaleString() : '---'}</span>
-                                        <a href="${post.url}" target="_blank" class="text-[10px] bg-black text-white px-3 py-1 rounded-full font-bold uppercase hover:bg-yellow-500 transition">Ver no App</a>
+                                        <a href="${post.url}" target="_blank" class="text-[10px] bg-black text-white px-3 py-1 rounded-full font-bold uppercase hover:bg-yellow-500 transition">Ver Original</a>
                                     </div>
                                 </div>
                             </div>
@@ -78,11 +79,10 @@
                     }
                 });
             } catch (e) {
-                container.innerHTML = '<div class="bg-red-50 p-4 rounded text-red-500 text-xs text-center font-bold">Erro ao carregar Instagram. Verifique se o robô do Apify concluiu a tarefa.</div>';
+                container.innerHTML = '<div class="bg-red-50 p-4 rounded text-red-500 text-xs text-center">Erro ao carregar mídia do Instagram.</div>';
             }
         }
 
-        // FUNÇÃO: BUSCAR NOTÍCIAS (GOOGLE NEWS RSS)
         async function buscarNoticias() {
             const container = document.getElementById('lista-noticias');
             const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=Simone+Mendes+when:24h&hl=pt-BR&gl=BR&ceid=BR:pt-419');
@@ -98,19 +98,16 @@
                             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:border-yellow-500 transition-all group">
                                 <span class="bg-yellow-100 text-yellow-800 text-[10px] font-black px-2 py-1 rounded uppercase mb-2 inline-block">${item.author || 'Google News'}</span>
                                 <h3 class="font-bold text-gray-900 text-sm leading-tight mb-4 group-hover:text-yellow-600 transition-colors">${item.title}</h3>
-                                <a href="${item.link}" target="_blank" class="text-[11px] font-bold text-black border-b-2 border-yellow-500 pb-0.5 hover:text-yellow-600">LER MATÉRIA COMPLETA →</a>
+                                <a href="${item.link}" target="_blank" class="text-[11px] font-bold text-black border-b-2 border-yellow-500 pb-0.5 hover:text-yellow-600">LER MATÉRIA →</a>
                             </div>
                         `;
                     });
-                } else {
-                    container.innerHTML = '<p class="col-span-full text-center text-gray-400 py-10 italic">Nenhuma notícia nova nos portais nas últimas 24h.</p>';
                 }
             } catch (error) { 
-                container.innerHTML = '<p class="text-red-500 col-span-full text-center">Erro técnico ao carregar notícias.</p>'; 
+                container.innerHTML = '<p class="text-red-500 col-span-full text-center">Erro nas notícias.</p>'; 
             }
         }
 
-        // INICIAR DASHBOARD
         carregarInstagram();
         buscarNoticias();
     </script>
